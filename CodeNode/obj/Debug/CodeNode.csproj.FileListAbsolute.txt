@@ -1,0 +1,15 @@
+C:\Users\Schule\source\repos\CodeNode\CodeNode\bin\Debug\CodeNode.exe.config
+C:\Users\Schule\source\repos\CodeNode\CodeNode\bin\Debug\CodeNode.exe
+C:\Users\Schule\source\repos\CodeNode\CodeNode\bin\Debug\CodeNode.pdb
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.csproj.AssemblyReference.cache
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\MainWindow.g.cs
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\App.g.cs
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode_MarkupCompile.cache
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode_MarkupCompile.lref
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\MainWindow.baml
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.g.resources
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.Properties.Resources.resources
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.csproj.GenerateResource.cache
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.csproj.CoreCompileInputs.cache
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.exe
+C:\Users\Schule\source\repos\CodeNode\CodeNode\obj\Debug\CodeNode.pdb
