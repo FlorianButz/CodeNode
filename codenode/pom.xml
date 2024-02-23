@@ -9,5 +9,10 @@
     	<artifactId>javaparser-symbol-solver-core</artifactId>
     	<version>3.25.8</version>
 	</dependency>
+	<dependency>
+  		<groupId>com.formdev</groupId>
+  		<artifactId>flatlaf</artifactId>
+  		<version>3.4</version>
+	</dependency>
   </dependencies>
 </project>
