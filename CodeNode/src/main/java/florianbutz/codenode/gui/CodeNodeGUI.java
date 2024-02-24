@@ -63,9 +63,10 @@ public class CodeNodeGUI extends JFrame {
 	public CodeNodeGUI() {
 		setBackground(new Color(34, 40, 49));
 		setTitle("Code Node");
-		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1078, 617);
+		
+		setMinimumSize(new Dimension(1078, 617));
 		
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBackground(new Color(57, 62, 70));
@@ -91,6 +92,25 @@ public class CodeNodeGUI extends JFrame {
 			}
 		});
 		mnNewMenu.add(mntmNewMenuItem_1);
+		
+		JMenu mnNewMenu_1 = new JMenu("Info");
+		menuBar.add(mnNewMenu_1);
+		
+		JMenuItem mntmNewMenuItem_2 = new JMenuItem("Version");
+		mntmNewMenuItem_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+		        JOptionPane.showMessageDialog(
+		                null,
+		                "Dieses Programm wurde als Schulprojekt von Florian Butz erstellt. \nSoftware Version: " + Main.softwareVersion,
+		                "Version",
+		                JOptionPane.INFORMATION_MESSAGE
+		                );
+			}
+		});
+		mnNewMenu_1.add(mntmNewMenuItem_2);
+		
+		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Eintellungen");
+		mnNewMenu_1.add(mntmNewMenuItem_3);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(60, 63, 65));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -105,7 +125,7 @@ public class CodeNodeGUI extends JFrame {
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		contentPane.add(scrollPane);
 		
-		lbTextMap = new JLabel("<html>\r\nTest<br>\r\n&nbsp;&nbsp;&nbsp;&nbsp;test</html>");
+		lbTextMap = new JLabel("");
 		lbTextMap.setVerticalAlignment(SwingConstants.TOP);
 		lbTextMap.setForeground(new Color(221, 221, 221));
 		lbTextMap.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -221,21 +241,19 @@ public class CodeNodeGUI extends JFrame {
 		btnDeleteNodemap.setIcon(GetIcon("/florianbutz/codenode/img/delete_btnicon.png", 20, 20));
 		contentPane.add(btnDeleteNodemap);
 		
-		/*
-		JSlider sNodemapViewportScale = new JSlider();
-		sNodemapViewportScale.addChangeListener(new ChangeListener() {
-		      public void stateChanged(ChangeEvent event) {
-		    	float scale = sNodemapViewportScale.getValue() / 100f;
-		        treePanel.viewportScale = scale;
-		      }
-		    });
-		sNodemapViewportScale.setMinimum(25);
-		sNodemapViewportScale.setValue(100);
-		sNodemapViewportScale.setToolTipText("Transparenz des Hintergrundmusters der Nodemap ändern.");
-		sNodemapViewportScale.setMaximum(250);
-		sNodemapViewportScale.setBounds(864, 518, 94, 27);
-		contentPane.add(sNodemapViewportScale);
-		*/
+		btnRefreshFile = new JButton("");
+		btnRefreshFile.setEnabled(false);
+		btnRefreshFile.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				RefreshOpenFile();
+			}
+		});
+		btnRefreshFile.setToolTipText("Datei erneut laden (Dies kann Änderungen verwerfen!)");
+		btnRefreshFile.setIcon(GetIcon("/florianbutz/codenode/img/reset_btnicon.png", 20, 20));
+		btnRefreshFile.setBackground(new Color(72, 77, 87));
+		btnRefreshFile.setBounds(455, 518, 27, 27);
+		contentPane.add(btnRefreshFile);
+		
 	}
 	
 	public static void DisplayError(String message, Object stacktrace, ErrorCode errorCode) {
@@ -264,6 +282,32 @@ public class CodeNodeGUI extends JFrame {
 		}
 	}
 	
+	public static boolean DisplayQuestion(String title, String message, int messageType, boolean isNoDefault) {
+		Object[] options = {};
+		if(!isNoDefault)
+        	options = new Object[] {"Ja", "Nein"};
+		else
+        	options = new Object[] {"Nein", "Ja"};
+
+        int result = JOptionPane.showOptionDialog(
+                null,
+                message,
+                title,
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                messageType,
+                null,
+                options,
+                options[0]);
+        
+		if (result == JOptionPane.OK_OPTION) {
+			if(isNoDefault) return false;
+			return true;
+		} else {
+			if(isNoDefault) return true;
+			return false;
+		}
+	}
+	
 	public ImageIcon GetIcon(String imgPath, int sizeX, int sizeY) {
 			Image i1 = new ImageIcon(CodeNodeGUI.class.getResource(imgPath)).getImage();
 			Image newimg = i1.getScaledInstance( sizeX, sizeY,  java.awt.Image.SCALE_SMOOTH);
@@ -276,12 +320,19 @@ public class CodeNodeGUI extends JFrame {
 	}
 	
 	public void ResetNodemap() {
-		treePanel.ResetGraph();
+		if(DisplayQuestion("Warnung", "Wollen sie wirklich alles löschen?\nNicht gespeicherte daten gehen dadurch verloren!", JOptionPane.WARNING_MESSAGE, true))
+		{
+			treePanel.ResetGraph();
+			lbTextMap.setText("");
+		}
 	}
 	
 	public static void ExitApp(int exitCode) {
 		System.exit(exitCode);
 	}
+	
+	private String lastFilePath = "";
+	private JButton btnRefreshFile;
 	
 	public void OpenFile() {
 		JFileChooser fileChooser = new JFileChooser();
@@ -290,11 +341,28 @@ public class CodeNodeGUI extends JFrame {
 	    if(returnVal == JFileChooser.APPROVE_OPTION) {
 	       System.out.println("You chose to open this file: " +
 	            fileChooser.getSelectedFile().getAbsolutePath());
-	       
-	       		String filePath= fileChooser.getSelectedFile().getAbsolutePath(); 
+	       		String filePath = fileChooser.getSelectedFile().getAbsolutePath();
 	       		
 	       		String parsed = Main.ParseCodes(treePanel, filePath);
 	       		lbTextMap.setText(parsed);
+	       		
+	       		lastFilePath = filePath;
+	       		btnRefreshFile.setEnabled(true);
 	    }
+	}
+	
+	public void RefreshOpenFile() {
+		if(lastFilePath == "") {
+			DisplayError("Datei konnte nicht erneut geladen werden.", "", ErrorCode.PathNotSet);
+       		btnRefreshFile.setEnabled(false);
+			return;
+		}
+
+		if(DisplayQuestion("Warnung", "Wollen sie die Datei wirklich erneut laden?\nNicht gespeicherte daten gehen dadurch verloren!", JOptionPane.WARNING_MESSAGE, true))
+		{
+			String filePath= lastFilePath; 
+			String parsed = Main.ParseCodes(treePanel, filePath);
+			lbTextMap.setText(parsed);
+		}
 	}
 }

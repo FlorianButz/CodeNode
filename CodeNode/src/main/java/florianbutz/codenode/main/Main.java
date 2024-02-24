@@ -20,11 +20,13 @@ import florianbutz.codenode.gui.TreePanel;
 
 public class Main {
 
-	public static String outputString;
+	public static String softwareVersion = "1.0.0";
 	
 	public static void main(String[] args) {
         CodeNodeGUI.BuildWindow();
     }
+	
+	public static String outputString;
 	
 	static String newLineString = "\n<br>";
 	static String typeFormat = "<b><font color='#b854d4'>@</font></b>";
@@ -122,9 +124,10 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
         int nodeCounter = -1;
         for (MethodDeclaration methodDeclaration : n.getMethods()) {
 			
-			String descriptionString = methodDeclaration.isPublic() ? "public" : "private" + "@n@n";
+			String descriptionString = methodDeclaration.isPublic() ? "public" : "private";
+			descriptionString += "@n@n";
 			StringBuilder descriptionBuilder = new StringBuilder(descriptionString);
-
+			
 			methodDeclaration.findAll(VariableDeclarator.class).forEach(variable -> {
 				    descriptionBuilder.append("~").append(variable.getNameAsString()).append(" : ").append(variable.getTypeAsString()).append("@n");
 			});
