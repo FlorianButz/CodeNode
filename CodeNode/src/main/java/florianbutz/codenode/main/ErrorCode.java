@@ -1,7 +1,7 @@
 package florianbutz.codenode.main;
 
 public enum ErrorCode {
-	ParsingError(1), RessourceLoadFailure(2), PathNotSet(3), FileNotFound(4);
+	ParsingError(1), RessourceLoadFailure(2), PathNotSet(3), FileNotFound(4), FileLoadFaliure(5);
 	
 	private final int value;
     private ErrorCode(int value) {

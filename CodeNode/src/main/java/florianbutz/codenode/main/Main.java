@@ -1,10 +1,18 @@
 package florianbutz.codenode.main;
 
 import java.awt.Color;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.SwingUtilities;
+
+import org.htmlcleaner.CleanerProperties;
+import org.htmlcleaner.HtmlCleaner;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -20,7 +28,7 @@ import florianbutz.codenode.gui.TreePanel;
 
 public class Main {
 
-	public static String softwareVersion = "1.0.0";
+	public static String softwareVersion = "0.0.1a";
 	
 	public static void main(String[] args) {
         CodeNodeGUI.BuildWindow();
@@ -76,7 +84,7 @@ public class Main {
 	            outputString += newLineString;
 	        });
 
-	        outputString += "</font>" + newLineString + "Variablen:" + newLineString + newLineString;
+	        outputString += newLineString + "Variablen:" + newLineString + newLineString;
 	        
 	        compilationUnit.findAll(FieldDeclaration.class).forEach(field -> {
 	            com.github.javaparser.ast.type.Type fieldType = field.getVariable(0).getType();
@@ -99,6 +107,16 @@ public class Main {
 		}
 		
 		return "";
+	}
+
+	public static void CopyStructTextToClipboard(String text) {
+		CleanerProperties props = new CleanerProperties();
+		props.setPruneTags("script");
+		String result = new HtmlCleaner(props).clean(text).getText().toString().replace("&nbsp;", "");
+
+		StringSelection stringSelection = new StringSelection(result);
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(stringSelection, null);
 	}
 }
 
@@ -141,7 +159,7 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
 				yPos += connectedToClass.get(nodeCounter).getY() + (connectedToClass.get(nodeCounter).getDimension().height/2);
 			}
 			
-			CodeNode node = panel.CreateNode(methodDeclaration.getNameAsString() + "(" + methodDeclaration.getParameters() + ") : " + methodDeclaration.getTypeAsString(), 750*classCounter, yPos, 50, 50, null, Main.methodColor, finalDescriptionString);
+			CodeNode node = panel.CreateNode(methodDeclaration.getNameAsString() + "(" + methodDeclaration.getParameters().toString().replace("[", "").replace("]", "") + ") : " + methodDeclaration.getTypeAsString(), 750*classCounter, yPos, 50, 50, null, Main.methodColor, finalDescriptionString);
 			connectedToClass.add(node);
 			counter++;
 			nodeCounter++;
@@ -155,7 +173,7 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
 			fieldCounter++;
 		}
 
-        panel.CreateNode(n.getNameAsString(), (750*classCounter)-250, 0, 50, 50, connectedToClass, Main.classColor, n.getExtendedTypes() + " : " + n.getImplementedTypes());
+        panel.CreateNode(n.getNameAsString(), (750*classCounter)-250, 0, 50, 50, connectedToClass, Main.classColor, "Extends: " + n.getExtendedTypes().toString().replace("[", "").replace("]", "") + "@nImplements: " + n.getImplementedTypes().toString().replace("[", "").replace("]", ""));
         
         classCounter++;
     }

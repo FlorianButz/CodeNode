@@ -84,6 +84,7 @@ public class TreePanel extends JPanel{
     public void ResetViewport() {
     	SetViewportPosX(0);
     	SetViewportPosY(0);
+    	newViewportScaleFactor = 1.0f;
     }
     
     public void SetViewportPosX(int newPos) {
@@ -142,9 +143,9 @@ public class TreePanel extends JPanel{
 				else if(!e.isShiftDown() && e.isControlDown()) {
 					int notches = e.getWheelRotation();
 		            if (notches < 0) {
-		                newViewportScaleFactor = clamp(viewportScaleFactor * 1.1f, 0.5f, 2f);
+		                newViewportScaleFactor = clamp(viewportScaleFactor * 1.15f, 0.5f, 2f);
 		            } else {
-		                newViewportScaleFactor = clamp(viewportScaleFactor * 0.9f, 0.5f, 2f);
+		                newViewportScaleFactor = clamp(viewportScaleFactor * 0.85f, 0.5f, 2f);
 		            }
 				}
 			}
@@ -158,38 +159,43 @@ public class TreePanel extends JPanel{
                 
                 rawStartX = e.getX();
                 rawStartY = e.getY();
-                
+
                 draggedNode = isDraggingNode(nodes, new HashSet<CodeNode>());
-            	if(draggedNode != null) {
-            		dragNodeX = draggedNode.getX();
-            		dragNodeY = draggedNode.getY();
-            		draggedNode.isDragged = true;
-            	}
+                if(draggedNode != null) {
+                	dragNodeX = draggedNode.getX();
+                	dragNodeY = draggedNode.getY();
+                	draggedNode.isDragged = true;
+                }	
             }
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(MouseEvent e) {            	
             	if(draggedNode != null) draggedNode.isDragged = false;
             }
         });
         
         addMouseMotionListener(new MouseMotionAdapter() {
+        	
         	@Override
         	public void mouseMoved(MouseEvent e) {
         		deltaX = e.getX();
         		deltaY = e.getY();
         	}
+        	
             @Override
-            public void mouseDragged(MouseEvent e) {
-            	
-            	if(draggedNode == null) {
-            		SetViewportPosX(e.getX() - startX);
-            		SetViewportPosY(e.getY() - startY);
-            	}else {
-            		int newDragNodeX = dragNodeX + (e.getX() - rawStartX);
-                    int newDragNodeY = dragNodeY + (e.getY() - rawStartY);
-                    
-                    draggedNode.SetPosition(newDragNodeX, newDragNodeY);
-				}
+            public void mouseDragged(MouseEvent e) {     
+            	deltaX = e.getX();
+        		deltaY = e.getY();
+
+        		if(draggedNode == null) {
+        			SetViewportPosX(e.getX() - startX);
+        			SetViewportPosY(e.getY() - startY);
+        		}else {
+        			int newDragNodeX = dragNodeX + (e.getX() - rawStartX);
+        			int newDragNodeY = dragNodeY + (e.getY() - rawStartY);
+
+        			draggedNode.SetPosition(newDragNodeX, newDragNodeY);
+        		}
+
             }
         });
     }
@@ -262,9 +268,57 @@ public class TreePanel extends JPanel{
         graphics2D.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), borderRadius, borderRadius);
         
         AffineTransform at = new AffineTransform();
+        float centerX = getWidth() / 2f;
+        float centerY = getHeight() / 2f;
         at.setToIdentity();
+        at.translate(centerX, centerY);
         at.scale(viewportScaleFactor, viewportScaleFactor);
+        at.translate(-centerX, -centerY);
         graphics2D.transform(at);
+        
+        //Set  anti-alias!
+        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+        		RenderingHints.VALUE_ANTIALIAS_ON); 
+        
+        // Set anti-alias for text
+        graphics2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+        		RenderingHints.VALUE_TEXT_ANTIALIAS_ON); 
+        AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, backgroundTransparency);
+        graphics2D.setComposite(alphaComposite);
+        
+        try {
+        	URL imageUrl = getClass().getResource(activePattern);
+        	BufferedImage image;
+        	image = ImageIO.read(imageUrl);
+        	
+        	graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        	
+        	int repeats = 12;
+        	int imageWidth = 400;
+        	int imageHeight = 400;
+        	
+        	int teleportDistance = 400;
+        	
+        	for(int x = 0; x < repeats; x++) {
+        		for(int y = 0; y < repeats; y++) {
+        			graphics2D.drawImage(
+        					image,
+        					GetViewportX(((int)((-viewportPosX - (imageWidth/2) * repeats) / teleportDistance)) * teleportDistance) + (imageWidth * x),
+        					GetViewportY(((int)((-viewportPosY - (imageHeight/2) * repeats) / teleportDistance)) * teleportDistance) + (imageHeight * y),
+        					imageWidth,
+        					imageHeight,
+        					this);
+        		}
+        	}
+        	
+        } catch (IOException e) {
+        	CodeNodeGUI.DisplayError("Textur konnte nicht geladen werden.", e.getLocalizedMessage(), ErrorCode.RessourceLoadFailure);
+        }
+        
+        alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f);
+        graphics2D.setComposite(alphaComposite);
+        
+        graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.transform(at);
@@ -276,48 +330,6 @@ public class TreePanel extends JPanel{
         } catch (NoninvertibleTransformException e) {
             e.printStackTrace();
         }
-
-        //Set  anti-alias!
-        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-        		RenderingHints.VALUE_ANTIALIAS_ON); 
-        
-        // Set anti-alias for text
-        graphics2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-        		RenderingHints.VALUE_TEXT_ANTIALIAS_ON); 
-        AlphaComposite alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, backgroundTransparency);
-        graphics2D.setComposite(alphaComposite);
-        	
-        try {
-        	URL imageUrl = getClass().getResource(activePattern);
-        	BufferedImage image;
-        	image = ImageIO.read(imageUrl);
-        	
-        	graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-
-        	int repeats = 2;
-        	int imageWidth = 1000;
-        	int imageHeight = 1000;
-
-        	for(int x = 0; x < repeats; x++) {
-        		for(int y = 0; y < repeats; y++) {
-        			graphics2D.drawImage(
-        					image,
-        					GetViewportXUnscaled(((int)((-viewportPosX - 75) / 50)) * 50) + (imageWidth * x),
-        					GetViewportYUnscaled(((int)((-viewportPosY - 75) / 50)) * 50) + (imageHeight * y),
-        					imageWidth,
-        					imageHeight,
-        					this);
-        		}	
-        	}
-        	
-        } catch (IOException e) {
-        	CodeNodeGUI.DisplayError("Textur konnte nicht geladen werden.", e.getLocalizedMessage(), ErrorCode.RessourceLoadFailure);
-        }
-        
-        alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f);
-        graphics2D.setComposite(alphaComposite);
-        
-    	graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         
     	// Draw connections
         for (CodeNode node : nodes) {
@@ -345,8 +357,8 @@ public class TreePanel extends JPanel{
     
     public void DrawNode(CodeNode node, Graphics2D g) {    	
     	Rectangle nodeRectangle = new Rectangle();
-    	nodeRectangle.x = GetViewportX(node.getX()) - node.getDimension().width / 2;
-    	nodeRectangle.y =  GetViewportY(node.getY()) - node.getDimension().height / 2;
+    	nodeRectangle.x = (int)((GetViewportX(node.getX()) - node.getDimension().width / 2));
+    	nodeRectangle.y =  (int)((GetViewportY(node.getY()) - node.getDimension().height / 2));
     	nodeRectangle.width = node.getDimension().width;
     	nodeRectangle.height = node.getDimension().height;
     	
@@ -381,8 +393,8 @@ public class TreePanel extends JPanel{
         int counter = 1;
         for (String sub : node.getDescription().split("@n")) {
             int xDesc = nodeRectangle.x + (nodeRectangle.width - metricsDesc.stringWidth(sub)) / 2;
-        	
-        	g.drawString(sub, xDesc, nodeRectangle.y + metricsDesc.getHeight() * 2 + (20 * counter));
+            
+        	g.drawString(sub, xDesc, nodeRectangle.y + metricsDesc.getHeight() * 2 + (13 * counter));
         	counter++;
 		}
     }
@@ -406,15 +418,33 @@ public class TreePanel extends JPanel{
     }
     
     public CodeNode CreateNode(String title, int x, int y, int width, int height, List<CodeNode> connectedNodes, Color nodeColor, String description) {
-    	int sizedWidth = (int)(title.length() * 7.5f) + width;
     	int sizedHeight = 0;
+    	
+    	int longestDescLineCount = 0;
     	
     	if(description == "") sizedHeight = 40;
     	else {
     		String[] lines = description.split("@n");
     		
-    		sizedHeight = 45 + (int)(20 * lines.length);
+    		for(int i = 0; i < lines.length; i++) {
+    			if(lines[i].length() > longestDescLineCount) longestDescLineCount = lines[i].length();
+    		}
+    		
+    		sizedHeight = 45 + (int)(13 * lines.length);
     	}
+    	
+    	int sizedWidth = width;
+    	if(title.length() > longestDescLineCount)
+    		sizedWidth = (int)(title.length() * 7.5f) + width;
+    	else
+    		sizedWidth = (int)(longestDescLineCount * 5f) + width;
+    	
+    	System.out.println(longestDescLineCount);
+
+    	if(title.length() > longestDescLineCount)
+    		System.out.println("Title size");
+    	else
+    		System.out.println("Description size");
     	
     	CodeNode node = new CodeNode(title, x, y+(sizedHeight/2), sizedWidth, sizedHeight, connectedNodes, description);
     	node.borderColor = nodeColor;
