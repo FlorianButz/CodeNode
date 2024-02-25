@@ -68,10 +68,12 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.Style;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
+import java.awt.Toolkit;
 
 public class CodeNodeGUI extends JFrame {
 
@@ -100,6 +102,7 @@ public class CodeNodeGUI extends JFrame {
 
 	
 	public CodeNodeGUI() {
+		setIconImage(Toolkit.getDefaultToolkit().getImage(CodeNodeGUI.class.getResource("/florianbutz/codenode/img/icon.png")));
 		instance = this;
 
 		setBackground(new Color(34, 40, 49));
@@ -138,11 +141,12 @@ public class CodeNodeGUI extends JFrame {
 		menuBar.add(mnNewMenu_1);
 		
 		JMenuItem mntmNewMenuItem_2 = new JMenuItem("Version");
-		mntmNewMenuItem_2.addActionListener(new ActionListener() {
+		mntmNewMenuItem_2.addActionListener(new ActionListener() {			
 			public void actionPerformed(ActionEvent e) {
 		        JOptionPane.showMessageDialog(
 		                null,
-		                "Dieses Programm wurde als Schulprojekt von Florian Butz erstellt. \nSoftware Version: " + Main.softwareVersion,
+		                "Dieses Programm wurde als Schulprojekt von Florian Butz erstellt. \nSoftware Version: " + Main.softwareVersion
+		                + "\n\n" + Main.licenseString,
 		                "Version",
 		                JOptionPane.INFORMATION_MESSAGE
 		                );
@@ -177,12 +181,14 @@ public class CodeNodeGUI extends JFrame {
 		lblNewLabel.setFont(new Font("Noto Sans", Font.BOLD, 15));
 		
 		treePanel = new TreePanel();
+		FileDropHandler fdh = new FileDropHandler(this);
+		fdh.setAutoOpenFile(true);
+		treePanel.setTransferHandler(fdh);
 		treePanel.nodeBackgroundColor = new Color(72, 77, 87);
 		treePanel.connectionColor = new Color(72, 77, 87);
 		treePanel.backgroundColor = new Color(48, 51, 58);
 		
-		CodeNode welcomeNode = new CodeNode("Wilkommen", 350, 240, 225, 75, null, "@nKlicke auf 'Datei öffnen' um zu starten.");
-		treePanel.AddNode(welcomeNode);
+		treePanel.CreateNode("Wilkommen", 350, 240, 225, 75, null, Color.orange, "@nKlicke auf Plus oder ziehe eine Datei hier rein um zu starten.");
 		
 		lblNodemap = new JLabel("Nodemap");
 		lblNodemap.setForeground(new Color(221, 221, 221));
@@ -194,14 +200,12 @@ public class CodeNodeGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(chckbxmntmNewCheckItem.isSelected()) {
 					FlatLightLaf.setup();
-					treePanel.backgroundColor = new Color(225, 225, 225);
 					instance.setVisible(false);
 					SwingUtilities.updateComponentTreeUI(instance);
 					instance.setVisible(true);
 
 				}else {
 					FlatDarkLaf.setup();
-					treePanel.backgroundColor = new Color(72, 76, 87);
 					instance.setVisible(false);
 					SwingUtilities.updateComponentTreeUI(instance);
 					instance.setVisible(true);
@@ -209,6 +213,58 @@ public class CodeNodeGUI extends JFrame {
 			}
 		});
 		mnNewMenu_1.add(chckbxmntmNewCheckItem);
+		
+		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Color Codes");
+		mntmNewMenuItem_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				Font font = new Font("Noto Sans", Font.BOLD, 17);
+				Font subFont = new Font("Noto Sans", Font.PLAIN, 12);
+				JLabel titleJLabel = new JLabel("Farb Codes für die Nodes\n");
+				titleJLabel.setFont(font);
+				
+				JSeparator separator = new JSeparator();
+				
+				JLabel classColorJLabel = new JLabel("Klassen");
+				classColorJLabel.setForeground(Main.classColor);
+				JLabel enumColorJLabel = new JLabel("Enums");
+				enumColorJLabel.setForeground(Main.enumColor);
+				JLabel enumEntryColorJLabel = new JLabel("Enum Eintrag");
+				enumEntryColorJLabel.setForeground(Main.enumEntryColor);
+				JLabel methodsColorJLabel = new JLabel("Methoden");
+				methodsColorJLabel.setForeground(Main.methodColor);
+				JLabel variableColorJLabel = new JLabel("Variablen");
+				variableColorJLabel.setForeground(Main.variableColor);
+				JLabel localVariableColorJLabel = new JLabel("Lokale Variablen");
+				localVariableColorJLabel.setForeground(Main.localVariableColor);
+
+				classColorJLabel.setFont			(subFont);
+				enumColorJLabel.setFont				(subFont);
+				enumEntryColorJLabel.setFont		(subFont);
+				methodsColorJLabel.setFont			(subFont);
+				variableColorJLabel.setFont			(subFont);
+				localVariableColorJLabel.setFont	(subFont);
+				
+				Object[] objects = {
+						titleJLabel,
+						separator,
+						classColorJLabel,
+						enumColorJLabel,
+						enumEntryColorJLabel,
+						methodsColorJLabel,
+						variableColorJLabel,
+						localVariableColorJLabel
+						};
+				
+				JOptionPane.showMessageDialog(
+		                null,
+		                objects,
+		                "Color Codes",
+		                JOptionPane.PLAIN_MESSAGE
+		                );
+			}
+		});
+		mnNewMenu_1.add(mntmNewMenuItem_3);
 		
 		JButton btnResetViewPosition = new JButton("");
 		btnResetViewPosition.setToolTipText("Kameraposition in der Nodemap zurrücksetzen.");
@@ -689,10 +745,10 @@ public class CodeNodeGUI extends JFrame {
 	   				if(result.isSuccessful())
 	   					fileTree.add(file);
 	   				else
-	   					DisplayError("Datei beinhaltet keinen oder fehlerhaften Java code.", null, ErrorCode.ParsingError);
+	   					DisplayError("Datei \"" + file.getName() + "\" beinhaltet keinen oder fehlerhaften Java code.", null, ErrorCode.ParsingError);
 	   				
 	   			} catch (IOException e) {
-	   				DisplayError("Datei konnte nicht gelesen werden.", e.getLocalizedMessage(), ErrorCode.FileLoadFaliure);
+	   				DisplayError("Datei \"" + file.getName() + "\" konnte nicht gelesen werden.", e.getLocalizedMessage(), ErrorCode.FileLoadFaliure);
 	   			}
 	   			
 	   			pbProgress.setValue(65);
@@ -726,11 +782,18 @@ public class CodeNodeGUI extends JFrame {
 	}
 }
 
+@SuppressWarnings("serial")
 class FileDropHandler extends TransferHandler {
 
 	CodeNodeGUI gui;
 	public FileDropHandler(CodeNodeGUI gui) {
 		this.gui = gui;
+	}
+	
+	private boolean autoOpenFile = false;
+	
+	public void setAutoOpenFile(boolean value) {
+		autoOpenFile = value;
 	}
 	
     @Override
@@ -755,6 +818,8 @@ class FileDropHandler extends TransferHandler {
             for (File file : fileList) {
             	gui.AddFile(file.getAbsolutePath());
             }
+            
+            if(autoOpenFile) gui.OpenFile(fileList.get(0).getAbsolutePath());
 
             return true;
         } catch (Exception e) {

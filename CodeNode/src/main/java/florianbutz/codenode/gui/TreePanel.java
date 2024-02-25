@@ -5,6 +5,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -100,7 +101,7 @@ public class TreePanel extends JPanel{
     
     private String activePattern = pattern1Path;
     
-    public int updateRate = 25;
+    public int updateRate = 13;
     
     public void ChangePattern(int pType) {
     	switch (pType) {
@@ -344,7 +345,7 @@ public class TreePanel extends JPanel{
     
     public void DrawConnections(CodeNode node, Graphics2D g) {
     	for (CodeNode connectedNode : node.getConnections()) {
-        	g.setColor(connectionColor);
+    		g.setPaint(new GradientPaint(GetViewportX(node.getX()), GetViewportY(node.getY()), node.borderColor, GetViewportX(connectedNode.getX()), GetViewportY(connectedNode.getY()), connectedNode.borderColor));
             g.setStroke(new BasicStroke(5));
         	g.draw(new Line2D.Float(
         			GetViewportX(node.getX()),
@@ -440,9 +441,9 @@ public class TreePanel extends JPanel{
     	
     	int sizedWidth = width;
     	if(title.length() > longestDescLineCount)
-    		sizedWidth = (int)(title.length() * 7.5f) + width;
+    		sizedWidth = (int)(title.length() * 8f) + width;
     	else
-    		sizedWidth = (int)(longestDescLineCount * 5f) + width;
+    		sizedWidth = (int)(longestDescLineCount * 4f) + width;
     	
     	System.out.println(longestDescLineCount);
 
