@@ -33,10 +33,12 @@ import java.awt.event.ActionEvent;
 import javax.swing.ScrollPaneConstants;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.validator.language_level_validations.chunks.NoUnderscoresInIntegerLiteralsValidator;
 
 import java.awt.Font;
 import java.awt.Image;
@@ -46,6 +48,7 @@ import java.awt.datatransfer.Transferable;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.ImageIcon;
 import javax.swing.JSlider;
@@ -63,6 +66,8 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 
 public class CodeNodeGUI extends JFrame {
 
@@ -72,6 +77,8 @@ public class CodeNodeGUI extends JFrame {
 	private TreePanel treePanel;
 	private JSlider sNodemapTransparency;
 
+	public static CodeNodeGUI instance;
+	
 	public static void BuildWindow() {
 		FlatDarkLaf.setup();
 		
@@ -89,6 +96,8 @@ public class CodeNodeGUI extends JFrame {
 
 	
 	public CodeNodeGUI() {
+		instance = this;
+
 		setBackground(new Color(34, 40, 49));
 		setTitle("Code Node - v" + Main.softwareVersion);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -137,9 +146,8 @@ public class CodeNodeGUI extends JFrame {
 		});
 		mnNewMenu_1.add(mntmNewMenuItem_2);
 		
-		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Eintellungen");
-		mnNewMenu_1.add(mntmNewMenuItem_3);
 		contentPane = new JPanel();
+		contentPane.setOpaque(false);
 		contentPane.setBackground(new Color(60, 63, 65));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -156,7 +164,6 @@ public class CodeNodeGUI extends JFrame {
 		lbTextMap.setForeground(new Color(221, 221, 221));
 		lbTextMap.setBorder(new EmptyBorder(10, 10, 10, 10));
 		lbTextMap.setFont(new Font("Noto Sans", Font.PLAIN, 14));
-		lbTextMap.setOpaque(true);
 		lbTextMap.setBackground(new Color(72, 77, 87));
 		scrollPane.setViewportView(lbTextMap);
 		
@@ -175,6 +182,28 @@ public class CodeNodeGUI extends JFrame {
 		lblNodemap = new JLabel("Nodemap");
 		lblNodemap.setForeground(new Color(221, 221, 221));
 		lblNodemap.setFont(new Font("Noto Sans", Font.BOLD, 15));
+		
+
+		JCheckBoxMenuItem chckbxmntmNewCheckItem = new JCheckBoxMenuItem("Light Mode");
+		chckbxmntmNewCheckItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(chckbxmntmNewCheckItem.isSelected()) {
+					FlatLightLaf.setup();
+					treePanel.backgroundColor = new Color(225, 225, 225);
+					instance.setVisible(false);
+					SwingUtilities.updateComponentTreeUI(instance);
+					instance.setVisible(true);
+
+				}else {
+					FlatDarkLaf.setup();
+					treePanel.backgroundColor = new Color(72, 76, 87);
+					instance.setVisible(false);
+					SwingUtilities.updateComponentTreeUI(instance);
+					instance.setVisible(true);
+				}
+			}
+		});
+		mnNewMenu_1.add(chckbxmntmNewCheckItem);
 		
 		JButton btnResetViewPosition = new JButton("");
 		btnResetViewPosition.setToolTipText("Kameraposition in der Nodemap zurrücksetzen.");
@@ -384,6 +413,7 @@ public class CodeNodeGUI extends JFrame {
 		);
 		
 		tFileTree = new JTree();
+		tFileTree.setShowsRootHandles(true);
 		tFileTree.setTransferHandler(new FileDropHandler(this));
         
 		tFileTree.addTreeSelectionListener(new TreeSelectionListener() {
