@@ -362,7 +362,12 @@ public class TreePanel extends JPanel{
     	nodeRectangle.width = node.getDimension().width;
     	nodeRectangle.height = node.getDimension().height;
     	
-        g.setColor(nodeBackgroundColor);
+    	Color bgColor = new Color(
+    			(int)((nodeBackgroundColor.getRed()*node.borderColor.getRed())/255), 
+    			(int)((nodeBackgroundColor.getGreen()*node.borderColor.getGreen())/255), 
+    			(int)((nodeBackgroundColor.getBlue()*node.borderColor.getBlue())/255));
+    	
+        g.setColor(bgColor);
         g.fillRoundRect(nodeRectangle.x, nodeRectangle.y, nodeRectangle.width, nodeRectangle.height, 15, 15);
         g.setStroke(new BasicStroke(2));
         

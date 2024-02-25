@@ -1,12 +1,14 @@
 package florianbutz.codenode.gui;
 
 import java.awt.Color;
+import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -29,6 +31,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.awt.event.ActionEvent;
 import javax.swing.ScrollPaneConstants;
 
@@ -68,6 +71,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JDialog;
 
 public class CodeNodeGUI extends JFrame {
 
@@ -160,6 +164,7 @@ public class CodeNodeGUI extends JFrame {
 		scrollPane.getVerticalScrollBar().setUnitIncrement(35);
 		
 		lbTextMap = new JLabel("");
+		lbTextMap.setOpaque(true);
 		lbTextMap.setVerticalAlignment(SwingConstants.TOP);
 		lbTextMap.setForeground(new Color(221, 221, 221));
 		lbTextMap.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -393,14 +398,18 @@ public class CodeNodeGUI extends JFrame {
 		btnAddFile.setToolTipText("Datei hinzufügen.");
 		btnAddFile.setIcon(GetIcon("/florianbutz/codenode/img/add_btnicon.png", 10, 10));
 		btnAddFile.setBackground(new Color(72, 77, 87));
+		
+		pbProgress = new JProgressBar();
+		pbProgress.setVisible(false);
 		GroupLayout gl_fileTreePanel = new GroupLayout(fileTreePanel);
 		gl_fileTreePanel.setHorizontalGroup(
-			gl_fileTreePanel.createParallelGroup(Alignment.LEADING)
+			gl_fileTreePanel.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_fileTreePanel.createSequentialGroup()
-					.addComponent(lblGeoeffnete, GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
+					.addComponent(lblGeoeffnete, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(btnAddFile, GroupLayout.PREFERRED_SIZE, 20, GroupLayout.PREFERRED_SIZE))
-				.addComponent(scrollPane_1, GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
+				.addComponent(scrollPane_1, GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE)
+				.addComponent(pbProgress, GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE)
 		);
 		gl_fileTreePanel.setVerticalGroup(
 			gl_fileTreePanel.createParallelGroup(Alignment.LEADING)
@@ -409,7 +418,9 @@ public class CodeNodeGUI extends JFrame {
 						.addComponent(lblGeoeffnete, GroupLayout.PREFERRED_SIZE, 20, GroupLayout.PREFERRED_SIZE)
 						.addComponent(btnAddFile, GroupLayout.PREFERRED_SIZE, 20, GroupLayout.PREFERRED_SIZE))
 					.addGap(7)
-					.addComponent(scrollPane_1, GroupLayout.DEFAULT_SIZE, 92, Short.MAX_VALUE))
+					.addComponent(scrollPane_1, GroupLayout.DEFAULT_SIZE, 61, Short.MAX_VALUE)
+					.addGap(17)
+					.addComponent(pbProgress, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 		);
 		
 		tFileTree = new JTree();
@@ -422,7 +433,7 @@ public class CodeNodeGUI extends JFrame {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tFileTree.getLastSelectedPathComponent();
                 int selectedIndex = getSelectedIndex(tFileTree) - 1;
 				
-                if (selectedNode != null && selectedNode.isLeaf()) {
+                if (selectedNode != null && selectedNode.isLeaf() && selectedIndex != -1) {
                 	OpenFile(fileTree.get(selectedIndex).getAbsolutePath());
                 }
                 
@@ -571,6 +582,14 @@ public class CodeNodeGUI extends JFrame {
        		btnRefreshFile.setEnabled(false);
        		btnCopyTextStructure.setEnabled(false);
        		lblNodemap.setText("Nodemap");
+       		currentOpenFile = "";
+       		
+       		tFileTree.setModel(new DefaultTreeModel(
+       				new DefaultMutableTreeNode("Dateien") {
+       					{
+       					}
+       				}
+       			));
 		}
 	}
 	
@@ -586,34 +605,52 @@ public class CodeNodeGUI extends JFrame {
 	
 	public void OpenFile(String filePath) {	
    		if(currentOpenFile.equals(filePath)) return;
-		String parsed = Main.ParseCodes(treePanel, filePath);
-   		lbTextMap.setText(parsed);
    		
-   		lastFilePath = filePath;
-   		btnRefreshFile.setEnabled(true);
-   		btnCopyTextStructure.setEnabled(true);
-   		lblNodemap.setText("Nodemap: " + Path.of(filePath).getFileName());
-   		currentOpenFile = filePath;
+   		pbProgress.setVisible(true);
+   		pbProgress.setValue(20);
+   		
+   		CompletableFuture<Void> asyncOperation = CompletableFuture.runAsync(() -> {
+   			String parsed = Main.ParseCodes(treePanel, filePath);
+
+   			pbProgress.setValue(65);
+   			lbTextMap.setText(parsed);
+   		});
+
+   		asyncOperation.thenRun(() -> {
+   			lastFilePath = filePath;
+   			btnRefreshFile.setEnabled(true);
+   			btnCopyTextStructure.setEnabled(true);
+   			
+   			pbProgress.setValue(85);
+   			
+   			lblNodemap.setText("Nodemap: " + Path.of(filePath).getFileName());
+   			currentOpenFile = filePath;
+   			
+   			pbProgress.setValue(100);
+   		});;
+		
+   		asyncOperation.thenRun(() -> {
+   			pbProgress.setVisible(false);
+   			pbProgress.setValue(0);
+   		});
 	}
 	
 	public void RefreshOpenFile() {
-		if(lastFilePath == "") {
+		if(currentOpenFile == "") {
 			DisplayError("Datei konnte nicht erneut geladen werden.", "", ErrorCode.PathNotSet);
        		btnRefreshFile.setEnabled(false);
 			return;
 		}
 
-		if(DisplayQuestion("Warnung", "Wollen sie die Datei wirklich erneut laden?\nNicht gespeicherte daten gehen dadurch verloren!", JOptionPane.WARNING_MESSAGE, true))
-		{
-			String filePath= lastFilePath; 
-			String parsed = Main.ParseCodes(treePanel, filePath);
-			lbTextMap.setText(parsed);
-		}
-	}
+		String filePath = currentOpenFile; 
+		String parsed = Main.ParseCodes(treePanel, filePath);
+		lbTextMap.setText(parsed);
+}
 	
 	private List<File> fileTree = new ArrayList<File>();
 	private JTree tFileTree;
 	private JLabel lblNodemap;
+	private JProgressBar pbProgress;
 	
 	public void AddFile() {
 		JFileChooser fileChooser = new JFileChooser();
@@ -623,68 +660,69 @@ public class CodeNodeGUI extends JFrame {
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
 			File[] files = fileChooser.getSelectedFiles();
 
-			ParseResult<CompilationUnit> result;
-			JavaParser parser = new JavaParser();
 			for (File file : files) {
 				if(fileTree.contains(file)) continue;
 				
-				try {
-		            String javaCode = Files.readString(Path.of(file.getAbsolutePath()));
-		            result = parser.parse(javaCode);
-					
-					if(result.isSuccessful())
-						fileTree.add(file);
-					else
-			        	DisplayError("Datei beinhaltet keinen oder fehlerhaften Java code.", null, ErrorCode.ParsingError);
-		            
-		        } catch (IOException e) {
-		        	DisplayError("Datei konnte nicht gelesen werden.", e.getLocalizedMessage(), ErrorCode.FileLoadFaliure);
-		        }
+				AddFile(file.getAbsolutePath());
 			}
-
-			DefaultMutableTreeNode root = new DefaultMutableTreeNode("Dateien");
-			DefaultTreeModel treeModel = new DefaultTreeModel(root);
-
-			for (File file : fileTree) {
-				DefaultMutableTreeNode fileChild = new DefaultMutableTreeNode(file.getName());
-				root.add(fileChild);
-			}
-
-			tFileTree.setModel(treeModel);
 		}
 	}
 	
 	public void AddFile(String path) {
-			ParseResult<CompilationUnit> result;
-			JavaParser parser = new JavaParser();
 
 			File file = new File(path);
 			if(fileTree.contains(file)) return;
 			
-			try {
-				String javaCode = Files.readString(Path.of(file.getAbsolutePath()));
-				result = parser.parse(javaCode);
+			pbProgress.setVisible(true);
+	   		pbProgress.setValue(20);
+	   		
+	   		CompletableFuture<Void> asyncOperation = CompletableFuture.runAsync(() -> {
+	   			ParseResult<CompilationUnit> result;
+	   			JavaParser parser = new JavaParser();
 
-				if(result.isSuccessful())
-					fileTree.add(file);
-				else
-					DisplayError("Datei beinhaltet keinen oder fehlerhaften Java code.", null, ErrorCode.ParsingError);
+	   			try {
+	   				String javaCode = Files.readString(Path.of(file.getAbsolutePath()));
+	   				result = parser.parse(javaCode);
+	   				
+	   				pbProgress.setValue(45);
+	   				
+	   				if(result.isSuccessful())
+	   					fileTree.add(file);
+	   				else
+	   					DisplayError("Datei beinhaltet keinen oder fehlerhaften Java code.", null, ErrorCode.ParsingError);
+	   				
+	   			} catch (IOException e) {
+	   				DisplayError("Datei konnte nicht gelesen werden.", e.getLocalizedMessage(), ErrorCode.FileLoadFaliure);
+	   			}
+	   			
+	   			pbProgress.setValue(65);
+	   		
+	   		});
+			
+	   		asyncOperation.thenRun(() -> {
+	   			
+	   			DefaultMutableTreeNode root = new DefaultMutableTreeNode("Dateien");
+	   			DefaultTreeModel treeModel = new DefaultTreeModel(root);
+	   			
+	   			pbProgress.setValue(70);
+	   			
+	   			int count = 1;
+	   			for (File file1 : fileTree) {
+	   				pbProgress.setValue(((int)(70 + count) / fileTree.size()) * 15);
+	   				
+	   				DefaultMutableTreeNode fileChild = new DefaultMutableTreeNode(file1.getName());
+	   				root.add(fileChild);
+	   				count++;
+	   			}
+	   			
+	   			tFileTree.setModel(treeModel);
+	   			pbProgress.setValue(100);
+	   		});
 
-			} catch (IOException e) {
-				DisplayError("Datei konnte nicht gelesen werden.", e.getLocalizedMessage(), ErrorCode.FileLoadFaliure);
-			}
-
-
-			DefaultMutableTreeNode root = new DefaultMutableTreeNode("Dateien");
-			DefaultTreeModel treeModel = new DefaultTreeModel(root);
-
-			for (File file1 : fileTree) {
-				DefaultMutableTreeNode fileChild = new DefaultMutableTreeNode(file1.getName());
-				root.add(fileChild);
-			}
-
-			tFileTree.setModel(treeModel);
-	
+	   		asyncOperation.thenRun(() ->{
+	   			pbProgress.setVisible(false);
+	   			pbProgress.setValue(0);
+	   		});
 	}
 }
 

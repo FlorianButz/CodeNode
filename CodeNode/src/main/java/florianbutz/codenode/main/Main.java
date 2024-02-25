@@ -44,6 +44,7 @@ public class Main {
 
 	static Color classColor = new Color(255, 211, 105);
 	static Color variableColor = new Color(31, 149, 211);
+	static Color localVariableColor = new Color(200, 125, 24);
 	static Color methodColor = new Color(242, 30, 24);
 	
 	static String tabString = "&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -130,6 +131,7 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
 	}
 	
     int classCounter = 0;
+    int previousMaxLocalVarCount = 0;
 	
     @Override
     public void visit(ClassOrInterfaceDeclaration n, Void arg) {
@@ -138,19 +140,23 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
         
         List<CodeNode> connectedToClass = new ArrayList<CodeNode>();
         
+        int localVarCounter = 1;
         int counter = 2;
         int nodeCounter = -1;
+        
+        int maxLocalVarCounterValue = 0;
+        
+        for (MethodDeclaration methodDeclaration : n.getMethods()) {
+			List<VariableDeclarator> variables = methodDeclaration.findAll(VariableDeclarator.class);
+			maxLocalVarCounterValue += variables.size();
+        }
+        
+        System.out.println(maxLocalVarCounterValue);
+        maxLocalVarCounterValue = (int)(maxLocalVarCounterValue / 4);
+        
         for (MethodDeclaration methodDeclaration : n.getMethods()) {
 			
 			String descriptionString = methodDeclaration.isPublic() ? "public" : "private";
-			descriptionString += "@n@n";
-			StringBuilder descriptionBuilder = new StringBuilder(descriptionString);
-			
-			methodDeclaration.findAll(VariableDeclarator.class).forEach(variable -> {
-				    descriptionBuilder.append("~").append(variable.getNameAsString()).append(" : ").append(variable.getTypeAsString()).append("@n");
-			});
-			
-			String finalDescriptionString = descriptionBuilder.toString();
 			
 			int yPos = 100;
 			if(nodeCounter != -1)
@@ -158,23 +164,53 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
 				String[] lines = connectedToClass.get(nodeCounter).getDescription().split("@n");
 				yPos += connectedToClass.get(nodeCounter).getY() + (connectedToClass.get(nodeCounter).getDimension().height/2);
 			}
+
+			List<CodeNode> methodConnections = new ArrayList<CodeNode>(); 
 			
-			CodeNode node = panel.CreateNode(methodDeclaration.getNameAsString() + "(" + methodDeclaration.getParameters().toString().replace("[", "").replace("]", "") + ") : " + methodDeclaration.getTypeAsString(), 750*classCounter, yPos, 50, 50, null, Main.methodColor, finalDescriptionString);
+			List<VariableDeclarator> variables = methodDeclaration.findAll(VariableDeclarator.class);
+			int varCounting = 0 - variables.size() / 2;
+			for(int v = 0; v < variables.size(); v++) {
+				CodeNode varNode = panel.CreateNode(variables.get(v).getNameAsString() + " : " + variables.get(v).getTypeAsString(),
+						750*classCounter + (previousMaxLocalVarCount * 200) + 200 + (200 * localVarCounter),
+						yPos + (varCounting * 50),
+						50, 50,
+						null,
+						Main.localVariableColor,
+						"");
+				varCounting++;
+				methodConnections.add(varNode);
+			}
+			
+			CodeNode node = panel.CreateNode(methodDeclaration.getNameAsString() + "(" + methodDeclaration.getParameters().toString().replace("[", "").replace("]", "") + ") : " + methodDeclaration.getTypeAsString(),
+					750*classCounter + previousMaxLocalVarCount * 200,
+					yPos,
+					50, 50,
+					methodConnections,
+					Main.methodColor,
+					descriptionString
+			);
+			
 			connectedToClass.add(node);
 			counter++;
 			nodeCounter++;
+			
+			if(localVarCounter < maxLocalVarCounterValue)
+				localVarCounter++;
+			else 
+				localVarCounter = 1;
 		}
         
         int fieldCounter = 1;
         for (FieldDeclaration fieldDeclaration : n.getFields()) {        	
-			CodeNode node = panel.CreateNode(fieldDeclaration.getVariable(0).getNameAsString() + " : " + fieldDeclaration.getVariable(0).getTypeAsString(), 750*classCounter, -100 * fieldCounter, 50, 50, null, Main.variableColor, fieldDeclaration.isPublic() ? "public" : "private");
+			CodeNode node = panel.CreateNode(fieldDeclaration.getVariable(0).getNameAsString() + " : " + fieldDeclaration.getVariable(0).getTypeAsString(), 750*classCounter + previousMaxLocalVarCount * 200, -100 * fieldCounter, 50, 50, null, Main.variableColor, fieldDeclaration.isPublic() ? "public" : "private");
 			connectedToClass.add(node);
 			counter++;
 			fieldCounter++;
 		}
 
-        panel.CreateNode(n.getNameAsString(), (750*classCounter)-250, 0, 50, 50, connectedToClass, Main.classColor, "Extends: " + n.getExtendedTypes().toString().replace("[", "").replace("]", "") + "@nImplements: " + n.getImplementedTypes().toString().replace("[", "").replace("]", ""));
+        panel.CreateNode(n.getNameAsString(), (750*classCounter + previousMaxLocalVarCount * 200)-250, 0, 50, 50, connectedToClass, Main.classColor, "Extends: " + n.getExtendedTypes().toString().replace("[", "").replace("]", "") + "@nImplements: " + n.getImplementedTypes().toString().replace("[", "").replace("]", ""));
         
+        previousMaxLocalVarCount += maxLocalVarCounterValue;
         classCounter++;
     }
 
