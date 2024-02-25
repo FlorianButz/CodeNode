@@ -630,7 +630,7 @@ public class CodeNodeGUI extends JFrame {
 	}
 	
 	public void ResetNodemap() {
-		if(DisplayQuestion("Warnung", "Wollen sie wirklich alles löschen?\nNicht gespeicherte daten gehen dadurch verloren!", JOptionPane.WARNING_MESSAGE, false))
+		if(DisplayQuestion("Warnung", "Wollen sie wirklich alles löschen?\nÄnderungen gehen dadurch verloren!", JOptionPane.WARNING_MESSAGE, false))
 		{
 			treePanel.ResetGraph();
 			lbTextMap.setText("");

@@ -55,12 +55,16 @@ public class Main {
 	
 	public static void main(String[] args) {
         CodeNodeGUI.BuildWindow();
+
+        System.out.println("Running on Java version: " + System.getProperty("java.runtime.version"));
     }
 	
 	public static String outputString;
 	
 	static String newLineString = "\n<br>";
 	static String typeFormat = "<b><font color='#b854d4'>@</font></b>";
+	static String enumNameFormat = "<font color='#084319'>@</font>";
+	static String enumConstantNameFormat = "<font color='#14250b'>@</font>";
 	static String methodNameFormat = "<font color='#6684e1'>@</font>";
 	static String variableNameFormat = "<font color='#1fad83'>@</font>";
 	static String declarationModiFormat = "<font color='#7d7a68'>@</font>";
@@ -107,7 +111,6 @@ public class Main {
 	            method.findAll(VariableDeclarator.class).forEach(variable -> {
 		            outputString += FormatText(tabString + tabString + "~ ", declarationModiFormat) + FormatText(variable.getNameAsString() , variableNameFormat) + " : " + FormatText(variable.getTypeAsString(), typeFormat) + newLineString;
 	            });
-	            outputString += newLineString;
 	        });
 
 	        outputString += newLineString + "Variablen:" + newLineString + newLineString;
@@ -120,6 +123,22 @@ public class Main {
 	            else
 	            	outputString += FormatText(tabString + "-", declarationModiFormat);
 	            outputString += " " + FormatText(field.getVariable(0).toString(), variableNameFormat) + " : " + FormatText(fieldType.toString(), typeFormat) + newLineString;
+	        });
+	        
+	        outputString += newLineString + "Enums:" + newLineString + newLineString;
+	        
+	        compilationUnit.findAll(EnumDeclaration.class).forEach(method -> {
+	            
+	            if(method.isPublic())
+	            	outputString += FormatText(tabString + "+", declarationModiFormat);
+	            else
+	            	outputString += FormatText(tabString + "-", declarationModiFormat);
+	            outputString += " " + FormatText(method.getNameAsString(), enumNameFormat) + newLineString;
+	            
+	            method.findAll(EnumConstantDeclaration.class).forEach(variable -> {
+		            outputString += FormatText(tabString + tabString + "~ ", declarationModiFormat) + FormatText(variable.getNameAsString() , enumConstantNameFormat) + newLineString;
+	            });
+	            outputString += newLineString;
 	        });
 	        
 			new DeclarationVisitor(panel).visit(compilationUnit, null);
