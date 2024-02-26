@@ -35,7 +35,7 @@ import florianbutz.codenode.gui.TreePanel;
 
 public class Main {
 
-	public static String softwareVersion = "1.0.2R";
+	public static String softwareVersion = "1.0.3R";
 	public static String licenseString = "MIT License\r\n"
 			+ "\r\n"
 			+ "Copyright (c) 2024 Florian Butz\r\n"

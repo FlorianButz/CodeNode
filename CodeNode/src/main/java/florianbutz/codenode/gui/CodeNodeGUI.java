@@ -571,7 +571,8 @@ public class CodeNodeGUI extends JFrame {
 	}
 	
 	public static void DisplayError(String message, Object stacktrace, ErrorCode errorCode) {
-        Object[] options = {"Programm Beenden", "Ignorieren"};
+      
+		Object[] options = {"Programm Beenden", "Ignorieren"};
 
         int result = 0;
         
