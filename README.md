@@ -3,7 +3,8 @@
 </picture>
 
 ## Java-CodeNode
-Ein Schulprojekt, dass Java-Code in einem einfachen Diagramm darstellen kann.
+Ein Schulprojekt, dass Java Quellcode in einem einfachen Diagramm darstellen kann.
+In dem Diagramm können Klassen, Felder, Methoden, Lokale Variablen und Enums dargestellt werden.
 
 ## Screenshots
 
