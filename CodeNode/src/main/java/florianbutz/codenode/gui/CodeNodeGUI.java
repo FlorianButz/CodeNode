@@ -85,14 +85,15 @@ public class CodeNodeGUI extends JFrame {
 
 	public static CodeNodeGUI instance;
 	
-	public static void BuildWindow() {
+	public static void BuildWindow(String[] args) {
 		FlatDarkLaf.setup();
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					CodeNodeGUI frame = new CodeNodeGUI();
+					CodeNodeGUI frame = new CodeNodeGUI(args);
 					frame.setVisible(true);
+					CodeNodeGUI.instance = frame;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -101,7 +102,7 @@ public class CodeNodeGUI extends JFrame {
 	}
 
 	
-	public CodeNodeGUI() {
+	public CodeNodeGUI(String[] args) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage(CodeNodeGUI.class.getResource("/florianbutz/codenode/img/icon.png")));
 		instance = this;
 
@@ -550,6 +551,23 @@ public class CodeNodeGUI extends JFrame {
 					.addGap(6))
 		);
 		contentPane.setLayout(gl_contentPane);
+	
+		// OPENING FILE
+		if (args.length > 0) {        		
+    		for (int i=0; i< args.length; i++) {
+    			System.out.println("Argument: " + args[i]);
+    			
+    			Path path = Path.of(args[i]);
+    			if(Files.exists(path)) {        				
+    				CodeNodeGUI.instance.AddFile(args[i]);
+    			}
+    		}
+    		
+    		Path path = Path.of(args[0]);
+			if(Files.exists(path)) {
+				CodeNodeGUI.instance.OpenFile(args[0]);
+			}
+    	}	
 	}
 	
 	public static void DisplayError(String message, Object stacktrace, ErrorCode errorCode) {

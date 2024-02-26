@@ -1,12 +1,17 @@
 package florianbutz.codenode.main;
 
 import java.awt.Color;
+import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
@@ -30,7 +35,7 @@ import florianbutz.codenode.gui.TreePanel;
 
 public class Main {
 
-	public static String softwareVersion = "1.0.1R";
+	public static String softwareVersion = "1.0.2R";
 	public static String licenseString = "MIT License\r\n"
 			+ "\r\n"
 			+ "Copyright (c) 2024 Florian Butz\r\n"
@@ -54,7 +59,7 @@ public class Main {
 			+ "SOFTWARE.";
 	
 	public static void main(String[] args) {
-        CodeNodeGUI.BuildWindow();
+        CodeNodeGUI.BuildWindow(args);
 
         System.out.println("Running on Java version: " + System.getProperty("java.runtime.version"));
     }
