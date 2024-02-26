@@ -36,6 +36,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.ScrollPaneConstants;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
@@ -93,7 +94,6 @@ public class CodeNodeGUI extends JFrame {
 				try {
 					CodeNodeGUI frame = new CodeNodeGUI(args);
 					frame.setVisible(true);
-					CodeNodeGUI.instance = frame;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -103,9 +103,10 @@ public class CodeNodeGUI extends JFrame {
 
 	
 	public CodeNodeGUI(String[] args) {
-		setIconImage(Toolkit.getDefaultToolkit().getImage(CodeNodeGUI.class.getResource("/florianbutz/codenode/img/icon.png")));
 		instance = this;
-
+		
+		setIconImage(Toolkit.getDefaultToolkit().getImage(CodeNodeGUI.class.getResource("/florianbutz/codenode/img/icon.png")));		
+		
 		setBackground(new Color(34, 40, 49));
 		setTitle("Code Node - v" + Main.softwareVersion);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -171,14 +172,11 @@ public class CodeNodeGUI extends JFrame {
 		lbTextMap = new JLabel("");
 		lbTextMap.setOpaque(true);
 		lbTextMap.setVerticalAlignment(SwingConstants.TOP);
-		lbTextMap.setForeground(new Color(221, 221, 221));
 		lbTextMap.setBorder(new EmptyBorder(10, 10, 10, 10));
 		lbTextMap.setFont(new Font("Noto Sans", Font.PLAIN, 14));
-		lbTextMap.setBackground(new Color(72, 77, 87));
 		scrollPane.setViewportView(lbTextMap);
 		
 		JLabel lblNewLabel = new JLabel("Text Struktur");
-		lblNewLabel.setForeground(new Color(221, 221, 221));
 		lblNewLabel.setFont(new Font("Noto Sans", Font.BOLD, 15));
 		
 		treePanel = new TreePanel();
@@ -192,7 +190,6 @@ public class CodeNodeGUI extends JFrame {
 		treePanel.CreateNode("Wilkommen", 350, 240, 225, 75, null, Color.orange, "@nKlicke auf Plus oder ziehe eine Datei hier rein um zu starten.");
 		
 		lblNodemap = new JLabel("Nodemap");
-		lblNodemap.setForeground(new Color(221, 221, 221));
 		lblNodemap.setFont(new Font("Noto Sans", Font.BOLD, 15));
 		
 
@@ -275,7 +272,6 @@ public class CodeNodeGUI extends JFrame {
 				ResetViewport();
 			}
 		});
-		btnResetViewPosition.setBackground(new Color(72, 77, 87));
 		
 		JButton btnBGPattern1 = new JButton("");
 		btnBGPattern1.setToolTipText("Hintergrundmuster der Nodemap ändern.");
@@ -285,7 +281,6 @@ public class CodeNodeGUI extends JFrame {
 			}
 		});
 		btnBGPattern1.setIcon(GetIcon("/florianbutz/codenode/img/pattern1_btnicon.png", 15, 15));
-		btnBGPattern1.setBackground(new Color(72, 77, 87));
 		
 		JButton btnBGPattern2 = new JButton("");
 		btnBGPattern2.setToolTipText("Hintergrundmuster der Nodemap ändern.");
@@ -295,7 +290,6 @@ public class CodeNodeGUI extends JFrame {
 			}
 		});
 		btnBGPattern2.setIcon(GetIcon("/florianbutz/codenode/img/pattern2_btnicon.png", 15, 15));
-		btnBGPattern2.setBackground(new Color(72, 77, 87));
 		
 		JButton btnBGPattern3 = new JButton("");
 		btnBGPattern3.setToolTipText("Hintergrundmuster der Nodemap ändern.");
@@ -306,7 +300,6 @@ public class CodeNodeGUI extends JFrame {
 		});
 		 
 		btnBGPattern3.setIcon(GetIcon("/florianbutz/codenode/img/pattern3_btnicon.png", 15, 15));
-		btnBGPattern3.setBackground(new Color(72, 77, 87));
 		
 		sNodemapTransparency = new JSlider();
 		sNodemapTransparency.setMaximum(50);
@@ -326,7 +319,6 @@ public class CodeNodeGUI extends JFrame {
 			}
 		});
 		btnDeleteNodemap.setToolTipText("Nodemap löschen.");
-		btnDeleteNodemap.setBackground(new Color(72, 77, 87));
 		btnDeleteNodemap.setIcon(GetIcon("/florianbutz/codenode/img/delete_btnicon.png", 20, 20));
 		
 		btnRefreshFile = new JButton("");
@@ -441,7 +433,6 @@ public class CodeNodeGUI extends JFrame {
 		nodesPanel.setLayout(gl_nodesPanel);
 		
 		JLabel lblGeoeffnete = new JLabel("Geöffnete Dateien");
-		lblGeoeffnete.setForeground(new Color(221, 221, 221));
 		lblGeoeffnete.setFont(new Font("Noto Sans", Font.BOLD, 15));
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
@@ -454,7 +445,6 @@ public class CodeNodeGUI extends JFrame {
 		});
 		btnAddFile.setToolTipText("Datei hinzufügen.");
 		btnAddFile.setIcon(GetIcon("/florianbutz/codenode/img/add_btnicon.png", 10, 10));
-		btnAddFile.setBackground(new Color(72, 77, 87));
 		
 		pbProgress = new JProgressBar();
 		pbProgress.setVisible(false);
@@ -555,7 +545,7 @@ public class CodeNodeGUI extends JFrame {
 		// OPENING FILE
 		if (args.length > 0) {        		
     		for (int i=0; i< args.length; i++) {
-    			System.out.println("Argument: " + args[i]);
+    			System.out.println("Passed Arguments: " + args[i]);
     			
     			Path path = Path.of(args[i]);
     			if(Files.exists(path)) {        				
@@ -568,6 +558,9 @@ public class CodeNodeGUI extends JFrame {
 				CodeNodeGUI.instance.OpenFile(args[0]);
 			}
     	}	
+		
+		// REFRESHING EVERYTHING
+		SwingUtilities.updateComponentTreeUI(this);
 	}
 	
 	public static void DisplayError(String message, Object stacktrace, ErrorCode errorCode) {
@@ -766,8 +759,8 @@ public class CodeNodeGUI extends JFrame {
 	   				else
 	   					DisplayError("Datei \"" + file.getName() + "\" beinhaltet keinen oder fehlerhaften Java code.", null, ErrorCode.ParsingError);
 	   				
-	   			} catch (IOException e) {
-	   				DisplayError("Datei \"" + file.getName() + "\" konnte nicht gelesen werden.", e.getLocalizedMessage(), ErrorCode.FileLoadFaliure);
+	   			} catch (Exception e) {
+   					DisplayError("Datei \"" + file.getName() + "\" beinhaltet entweder keinen oder fehlerhaften Java Quellcode oder konnte nicht gelesen werden.", null, ErrorCode.ParsingError);
 	   			}
 	   			
 	   			pbProgress.setValue(65);

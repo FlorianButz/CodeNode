@@ -35,7 +35,7 @@ import florianbutz.codenode.gui.TreePanel;
 
 public class Main {
 
-	public static String softwareVersion = "1.0.3R";
+	public static String softwareVersion = "1.0.4R";
 	public static String licenseString = "MIT License\r\n"
 			+ "\r\n"
 			+ "Copyright (c) 2024 Florian Butz\r\n"
@@ -185,7 +185,6 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
     @Override
     public void visit(ClassOrInterfaceDeclaration n, Void arg) {
         super.visit(n, arg);
-        System.out.println("Class: " + n.getName());
         
         List<CodeNode> connectedToClass = new ArrayList<CodeNode>();
         
@@ -199,8 +198,7 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
 			List<VariableDeclarator> variables = methodDeclaration.findAll(VariableDeclarator.class);
 			maxLocalVarCounterValue += variables.size();
         }
-        
-        System.out.println(maxLocalVarCounterValue);
+
         maxLocalVarCounterValue = (int)(maxLocalVarCounterValue / 4);
         
         for (MethodDeclaration methodDeclaration : n.getMethods()) {
@@ -285,7 +283,6 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
 			maxLocalVarCounterValue += variables.size();
         }
         
-        System.out.println(maxLocalVarCounterValue);
         maxLocalVarCounterValue = (int)(maxLocalVarCounterValue / 4);
         
         for (MethodDeclaration methodDeclaration : n.getMethods()) {
@@ -353,7 +350,6 @@ final class DeclarationVisitor extends VoidVisitorAdapter<Void> {
         		connectedToEnum,
         		Main.enumColor,
         		"");
-        System.out.println(n.getFields());
     }
     
     @Override

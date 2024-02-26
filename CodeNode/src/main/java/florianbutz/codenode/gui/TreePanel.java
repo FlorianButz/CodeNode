@@ -444,14 +444,7 @@ public class TreePanel extends JPanel{
     		sizedWidth = (int)(title.length() * 8f) + width;
     	else
     		sizedWidth = (int)(longestDescLineCount * 4f) + width;
-    	
-    	System.out.println(longestDescLineCount);
 
-    	if(title.length() > longestDescLineCount)
-    		System.out.println("Title size");
-    	else
-    		System.out.println("Description size");
-    	
     	CodeNode node = new CodeNode(title, x, y+(sizedHeight/2), sizedWidth, sizedHeight, connectedNodes, description);
     	node.borderColor = nodeColor;
     	AddNode(node);
